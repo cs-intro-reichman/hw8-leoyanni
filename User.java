@@ -54,13 +54,26 @@
     /** Makes this user follow the given name. If successful, returns true. 
      *  If this user already follows the given name, or if the follows list is full, does nothing and returns false; */
     public boolean addFollowee(String name) {
-        if (fCount< maxfCount){
-            follows[fCount] = name;
-            fCount++;
-            return true;
-        }
-    return false;
+        if (name.equals(this.name)) {
+        return false;
     }
+
+    
+    if (this.follows(name)) {
+        return false;
+    }
+
+    
+    if (fCount == follows.length) {
+        return false;
+    }
+
+    
+    follows[fCount] = name;
+    fCount++;
+
+    return true;
+}
 
     /** Removes the given name from the follows list of this user. If successful, returns true.
      *  If the name is not in the list, does nothing and returns false. */
@@ -82,19 +95,39 @@
     /** Counts the number of users that both this user and the other user follow.
     /*  Notice: This is the size of the intersection of the two follows lists. */
     public int countMutual(User other) {
-        int count = 0;
-        for(int i=0; i < this.fCount; i++){
-            String name = this.follows[i];
-
-            for(int j = 0; j < other.fCount; j++){
-                if(other.follows[j].equals(name)){
-                    count++;
-                    break;
-                }
-            }
-        }
+        if (other == null) {
         return 0;
     }
+
+    int count = 0;
+
+    
+    for (int i = 0; i < this.fCount; i++) {
+        String name = this.follows[i];
+        if (name == null) {
+            continue;
+        }
+
+        
+        boolean alreadyCounted = false;
+        for (int k = 0; k < i; k++) {
+            if (this.follows[k] != null && this.follows[k].equals(name)) {
+                alreadyCounted = true;
+                break;
+            }
+        }
+        if (alreadyCounted) {
+            continue;
+        }
+
+        
+        if (other.follows(name)) {
+            count++;
+        }
+    }
+
+    return count;
+}
 
     /** Checks is this user is a friend of the other user.
      *  (if two users follow each other, they are said to be "friends.") */

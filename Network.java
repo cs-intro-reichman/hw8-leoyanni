@@ -59,43 +59,74 @@ public class Network {
      *  or if the "follows" addition failed for some reason, returns false. */
     public boolean addFollowee(String name1, String name2) {
         User u1 = getUser(name1);
-        User u2 = getUser(name2);
+    User u2 = getUser(name2);
 
-        if (u1 == null || u2 == null) {
-            return false;
+    // name1 or name2 not in network
+    if (u1 == null || u2 == null) {
+        return false;
     }
-        return u1.addFollowee(name2);
+
+    // cannot follow yourself
+    if (name1.equals(name2)) {
+        return false;
+    }
+
+    // already follows
+    if (u1.follows(name2)) {
+        return false;
+    }
+
+    // try to add
+    return u1.addFollowee(name2);
 }
     
     /** For the user with the given name, recommends another user to follow. The recommended user is
      *  the user that has the maximal mutual number of followees as the user with the given name. */
     public String recommendWhoToFollow(String name) {
-        User me = getUser(name);
-        if (me == null) {
-            return null;
+    User me = getUser(name);
+    if (me == null) {
+        return null;
     }
 
-        User best = null;
-        int bestScore = -1;
+    String bestName = null;
+    int bestCount = 0;
 
-        for (int i = 0; i < userCount; i++) {
-            User candidate = users[i];
+    // candidate = önerilecek kişi
+    for (int i = 0; i < userCount; i++) {
+        String candidateName = users[i].getName();
 
-            if (candidate.getName().equals(name)) {
-                continue;
-        }
-            if (me.follows(candidate.getName())) {
-                continue;
-        }
-            int score = me.countMutual(candidate);
-
-            if (score > bestScore) {
-                bestScore = score;
-                best = candidate;
-        }
+        // kendimi önerme
+        if (candidateName.equals(name)) {
+            continue;
         }
 
-        return best == null ? null : best.getName();
+        // zaten takip ediyorsam önerme
+        if (me.follows(candidateName)) {
+            continue;
+        }
+
+        // kaç tane "via" var? (benim follow ettiklerimden kaç kişi bunu takip ediyor)
+        int count = 0;
+        for (int j = 0; j < userCount; j++) {
+            String viaName = users[j].getName();
+
+            // via kişi benim followee'm olmalı
+            if (me.follows(viaName)) {
+                // via kişi candidate'ı takip ediyor mu?
+                if (users[j].follows(candidateName)) {
+                    count++;
+                }
+            }
+        }
+
+        // en iyi adayı güncelle (sadece gerçekten öneri varsa)
+        if (count > bestCount) {
+            bestCount = count;
+            bestName = candidateName;
+        }
+    }
+
+    return bestName;
 }
 
     /** Computes and returns the name of the most popular user in this network: 
@@ -140,7 +171,7 @@ public class Network {
       String ans = "Network:\n";
 
     for (int i = 0; i < userCount; i++) {
-        ans += users[i] + "\n";  
+        ans += users[i].toString() + "\n";
     }
     return ans;
 }
