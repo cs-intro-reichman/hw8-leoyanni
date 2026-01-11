@@ -84,49 +84,32 @@ public class Network {
      *  the user that has the maximal mutual number of followees as the user with the given name. */
     public String recommendWhoToFollow(String name) {
     User me = getUser(name);
-    if (me == null) {
-        return null;
-    }
+    if (me == null) return null;
 
-    String bestName = null;
+
+    
     int bestCount = 0;
 
-    // candidate = önerilecek kişi
+    User bestUser = null;
+
     for (int i = 0; i < userCount; i++) {
-        String candidateName = users[i].getName();
+        User candidate = users[i];
 
-        // kendimi önerme
-        if (candidateName.equals(name)) {
-            continue;
-        }
+        // kendisi → skip
+        if (candidate == me) continue;
 
-        // zaten takip ediyorsam önerme
-        if (me.follows(candidateName)) {
-            continue;
-        }
+        // zaten takip ediyorsam → skip
+        if (me.follows(candidate.getName())) continue;
 
-        // kaç tane "via" var? (benim follow ettiklerimden kaç kişi bunu takip ediyor)
-        int count = 0;
-        for (int j = 0; j < userCount; j++) {
-            String viaName = users[j].getName();
+        int mutuals = me.countMutual(candidate);
 
-            // via kişi benim followee'm olmalı
-            if (me.follows(viaName)) {
-                // via kişi candidate'ı takip ediyor mu?
-                if (users[j].follows(candidateName)) {
-                    count++;
-                }
-            }
-        }
-
-        // en iyi adayı güncelle (sadece gerçekten öneri varsa)
-        if (count > bestCount) {
-            bestCount = count;
-            bestName = candidateName;
+        if (mutuals > bestCount) {
+            bestCount = mutuals;
+            bestUser = candidate;
         }
     }
 
-    return bestName;
+    return (bestUser == null) ? null : bestUser.getName();
 }
 
     /** Computes and returns the name of the most popular user in this network: 
@@ -171,8 +154,13 @@ public class Network {
       String ans = "Network:\n";
 
     for (int i = 0; i < userCount; i++) {
-        ans += users[i].toString() + "\n";
+        ans += users[i].toString();
+        if (i < userCount - 1) {
+            ans += "\n";
+        }
     }
+
+    ans += "\n";   
     return ans;
 }
 }
